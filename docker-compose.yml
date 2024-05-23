@@ -1,0 +1,16 @@
+version: '3'
+services:
+  frontend:
+    image: ${FRONT_IMAGE_NAME}:${BUILD_NUMBER}
+    ports:
+      - "3000:3000"
+    volumes:
+      - /app/build:/build
+    command: /bin/sh -c "npm run build && npm start"
+  backend:
+    image: ${BACK_IMAGE_NAME}:${BUILD_NUMBER}
+    ports:
+      - "8000:8000"
+    depends_on:
+      - frontend
+

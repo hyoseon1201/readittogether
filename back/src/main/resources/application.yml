@@ -1,0 +1,102 @@
+spring:
+  config:
+    import: optional:classpath:env.yml
+  
+  datasource:
+    url: ${DATABASE_URL}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        show_sql: false
+        format_sql: true
+        default_batch_fetch_size: 100
+  jwt:
+    secret: vmfhaltmskdlstkfkdgodyroqkfwkdbalroqkfwkdbalaaaaaaaaaaaaaaaabbbblkjlkjkldfdhgfhjgkjb
+
+  h2:
+    console:
+      enabled: false
+
+  cloud:
+    gcp:
+      storage:
+        credentials:
+          location: classpath:gcs_cloud.json
+        project-id: compelling-weft-415104
+        bucket: d206
+    aws:
+      credentials:
+        access-key: ${AWS_ACCESS_KEY}
+        secret-key: ${AWS_SECRET_KEY}
+      region:
+        static: ap-northeast-2
+      stack:
+        auto: false
+      s3:
+        bucket-name: ${BUCKET_NAME}
+
+  profiles:
+    active: local
+  servlet:
+    multipart:
+      max-request-size: 30MB
+      max-file-size: 10MB
+
+logging:
+  level:
+    org.hibernate.SQL: trace
+    org.springframework.security: debug
+    org.ssafy.studyback: DEBUG
+
+server:
+  port: 8000
+
+cors:
+  allowed-origins: ${BACK_URL}
+
+springdoc:
+  swagger-ui:
+    path: /v3/api-docs
+
+profile:
+  image: ${BASIC_PROFILE_IMAGE}
+
+---
+spring:
+  mail:
+    default-encoding: UTF-8
+    host: smtp.gmail.com
+    port: 587
+    username: ${SMTP_USERNAME}
+    password: ${SMTP_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          mime:
+            charset: UTF-8
+          transport:
+            protocol: smtp
+          debug: true
+---
+
+kakao:
+  auth:
+    url: ${KAKAO_AUTH_REQ_URL}
+  client-id: ${KAKAO_CLIENTOID}
+  redirect-uri: ${KAKAO_REDIRECT_URI}
+
+
+spring:
+  data:
+    redis:
+      host: ${HOST_URL}
+      port: 6379

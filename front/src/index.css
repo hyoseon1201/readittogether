@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+
+/* 글로벌 스타일 시트 또는 TailwindCSS의 index.css 파일 내에 추가 */
+/* 웹킷 기반 브라우저용 스타일 */
+::-webkit-scrollbar {
+  width: 12px; /* 스크롤 바의 너비 */
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1; /* 스크롤 바 트랙의 배경 색상 */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888; /* 스크롤 바의 색상 */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555; /* 스크롤 바를 호버했을 때의 색상 */
+}

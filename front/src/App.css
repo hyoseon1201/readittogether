@@ -1,0 +1,53 @@
+/* 사이드바 기본 스타일 */
+.sidebar {
+  transition: transform 0.3s ease-in-out; /* 애니메이션 효과 */
+  transform: translateX(-100%); /* 기본 위치를 왼쪽으로 숨김 */
+}
+
+/* 사이드바가 표시되는 상태 */
+.sidebar-open {
+  transform: translateX(0); /* 화면 안으로 이동 */
+}
+
+.slider {
+  position: relative;
+  overflow: hidden;
+}
+.slides {
+  display: flex;
+  transition: transform 0.5s ease;
+}
+.slide {
+  min-width: 100%; /* 슬라이더의 너비에 맞게 설정 */
+  /* 추가 스타일 */
+}
+
+.star {
+  font-size: 24px;
+  cursor: pointer;
+  transition: color 200ms;
+}
+
+.smallstar {
+  font-size: 16px;
+  height: 27px;
+  cursor: pointer;
+  transition: color 200ms;
+}
+
+@font-face {
+  font-family: 'UhBeecharming';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_five@.2.0/UhBeecharming.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+.customFont {
+  font-family: 'UhBeecharming', monospace;
+}
+
+@media (max-width: 780px) {
+  .size-down {
+    width: 50%;
+  }
+}

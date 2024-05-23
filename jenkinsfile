@@ -1,0 +1,200 @@
+def backendImage
+def frontendImage
+def modelImage
+
+pipeline {
+    agent any
+    environment {
+        // 환경 변수 설정12345678
+        
+        GIT_REGISTRY_CREDENTIALS = credentials('gitlab_tokken')
+        DOCKER_REGISTRY_CREDENTIALS = credentials('docker')
+        GCP_SERVICE_ACCOUNT_JSON = credentials('GCP_SERVICE_ACCOUNT_JSON')
+        FRONT_IMAGE_NAME = "${env.FRONT_IMAGE_NAME}"
+        REACT_APP_API_BASE_URL = "${env.REACT_APP_API_BASE_URL}"
+        DATABASE_URL="${env.DATABASE_URL}"
+        DATABASE_USERNAME="${env.DATABASE_USERNAME}"
+        DATABASE_PASSWORD="${env.DATABASE_PASSWORD}"
+        DOCKER_COMPOSE_FILE = "docker-compose.yml" 
+        BACK_URL="${env.BACK_URL}"
+        //3.22일추가
+        SMTP_USERNAME="${env.SMTP_USERNAME}"
+        SMTP_PASSWORD="${env.SMTP_PASSWORD}"
+        HOST_URL="${env.HOST_URL}"
+        //3.27 aws 키추가
+        BUCKET_NAME="${env.BUCKET_NAME}"
+        AWS_SECRET_KEY="${env.AWS_SECRET_KEY}"
+        AWS_ACCESS_KEY="${env.AWS_ACCESS_KEY}"
+
+        //4.1일추가
+
+        KAKAO_AUTH_REQ_URL="${env.KAKAO_AUTH_REQ_URL}"
+        KAKAO_CLIENTOID="${env.KAKAO_CLIENTOID}"
+        KAKAO_REDIRECT_URI="${env.KAKAO_REDIRECT_URI}"
+
+
+            
+    }
+
+   
+    stages {
+        // stage('Install Java and Gradle') {
+        //     steps {
+        //         sh 'apt-get update && apt-get install -y default-jdk'
+        //         sh 'wget https://services.gradle.org/distributions/gradle-7.4-bin.zip'
+        //         sh 'unzip -d /opt/gradle gradle-7.4-bin.zip'
+        //         sh 'export PATH=$PATH:/opt/gradle/gradle-7.4/bin'
+        //     }
+        // }
+        // stage('Build Test') {
+        //     steps {
+        //         dir('back') {
+        //             sh 'chmod +x gradlew'
+        //             sh './gradlew build'
+        //         }
+        //     }
+        // }
+
+        stage('Unit Test') {
+            steps {
+                script {
+                    dir('back') {
+                        sh 'chmod +x ./gradlew'
+                        sh './gradlew test'
+            }
+        }
+    }
+}
+// 추후 통합테스트까지 진행예정
+//         stage('Integration Test') {
+//            steps {
+//                 script {
+//                     dir('back') {
+//                 sh 'chmod +x ./gradlew'
+//                 sh './gradlew integrationTest'
+//             }
+//         }
+//     }
+// }
+
+
+        stage('Checkout') {
+            steps {
+                script {
+                    git credentialsId: 'gitlab_tokken', url: 'https://lab.ssafy.com/s10-bigdata-recom-sub2/S10P22D206'
+                }
+            }
+        }
+
+
+        stage('Build and Push the Back-end Docker Image') {
+            steps {
+                script {
+                    sh 'echo "Starting Build Back Docker Image"'
+                    dir('back') {
+                        withDockerRegistry(credentialsId: 'docker', url: 'https://registry.hub.docker.com') {
+
+                            withCredentials([file(credentialsId: 'GCP_SERVICE_ACCOUNT_JSON', variable: 'GCP_SERVICE_ACCOUNT_JSON')]) {
+                                sh 'cp $GCP_SERVICE_ACCOUNT_JSON ./google_service_key.json'
+                               
+                                backendImage = docker.build("${BACK_IMAGE_NAME}:${env.BUILD_NUMBER}", 
+                                "--build-arg DATABASE_URL='${env.DATABASE_URL}' " +
+                                "--build-arg DATABASE_USERNAME='${env.DATABASE_USERNAME}' " +
+                                "--build-arg BACK_URL='${env.BACK_URL}' " +
+                                "--build-arg SMTP_USERNAME='${env.SMTP_USERNAME}' " +
+                                "--build-arg SMTP_PASSWORD='${env.SMTP_PASSWORD}' " +
+                                "--build-arg HOST_URL='${env.HOST_URL}' " +
+                                "--build-arg BUCKET_NAME='${env.BUCKET_NAME}' " +
+                                "--build-arg AWS_SECRET_KEY='${env.AWS_SECRET_KEY}' " +
+                                "--build-arg BASIC_PROFILE_IMAGE='${env.BASIC_PROFILE_IMAGE}' " +
+                                "--build-arg AWS_ACCESS_KEY='${env.AWS_ACCESS_KEY}' " +
+                                "--build-arg KAKAO_REDIRECT_URI='${env.KAKAO_REDIRECT_URI}' " +
+                                "--build-arg KAKAO_CLIENTOID='${env.KAKAO_CLIENTOID}' " +
+                                "--build-arg KAKAO_AUTH_REQ_URL='${env.KAKAO_AUTH_REQ_URL}' " +
+                                "--build-arg DATABASE_PASSWORD='${env.DATABASE_PASSWORD}' .")
+
+
+                                sh 'rm -f ./google_service_key.json' // 빌드 후 파일 삭제
+                                
+
+                                // Docker 빌드 결과 출력
+                                if (backendImage != 0) {
+                                    echo "Docker build succeeded: ${BACK_IMAGE_NAME}:${env.BUILD_NUMBER}"
+                                    docker.withRegistry('https://registry.hub.docker.com', 'docker') {
+                                        backendImage.push()
+                                }
+                                // sh "docker run -p 8000:8000 ${BACK_IMAGE_NAME}:${env.BUILD_NUMBER}"
+                                } else {
+                                    error "Docker build failed"
+                                }
+                                
+                            }
+                            
+                             
+                        }
+                    }
+                }
+            }
+            
+        }    
+
+        stage('Build and Push the Front-end Docker Image') {
+            steps {
+                script {
+                    sh 'echo "Starting Build Front Docker Image"'
+                    dir('front') {
+                        withDockerRegistry(credentialsId: 'docker', url: 'https://registry.hub.docker.com') {
+                             frontendImage = docker.build("${FRONT_IMAGE_NAME}:${env.BUILD_NUMBER}",
+                              "--build-arg REACT_APP_API_BASE_URL=${env.REACT_APP_API_BASE_URL} .")  //추후 예정
+                             
+
+                            if (frontendImage != 0) {
+                                echo "Docker build succeeded: ${FRONT_IMAGE_NAME}:${env.BUILD_NUMBER}"
+                                docker.withRegistry('https://registry.hub.docker.com', 'docker') {
+                                    frontendImage.push()
+                            }
+                            } else {
+                                error "Docker build failed"
+                            }
+                        }
+                    }
+                }
+            }
+            
+        }
+//         stage('Build Docker Images Without Cache') {
+//             steps {
+//                 script {
+//                     sh "docker-compose -f ${DOCKER_COMPOSE_FILE} build --no-cache"
+//         }
+//     }
+// }
+        stage('Deploy') {
+    steps {
+        script {
+            // 기존 프론트엔드 컨테이너 제거
+            // sh "docker-compose -f ${DOCKER_COMPOSE_FILE} rm -fs frontend"
+            // // 새로운 프론트엔드 컨테이너 생성
+            // sh "docker-compose -f ${DOCKER_COMPOSE_FILE} up -d --no-deps --build frontend"
+            // // 컨테이너 ID를 올바르게 가져오기 위한 수정
+             sh "docker-compose -f ${DOCKER_COMPOSE_FILE} pull"
+              sh "docker-compose -f ${DOCKER_COMPOSE_FILE} up -d"
+           
+        }
+    }
+}
+
+stage('Cleanup Unused Docker Images') {
+    steps {
+        script {
+            // 사용하지 않는 Docker 이미지 삭제 gg;;;
+            sh 'docker image prune -af'
+        }
+    }
+}
+
+
+
+    }
+}
+
